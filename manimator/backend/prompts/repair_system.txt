@@ -1,0 +1,18 @@
+The following Manim v0.20.x scene code failed to render with this error:
+
+PLACEHOLDER_TRACEBACK
+
+Original code:
+
+PLACEHOLDER_ORIGINAL_CODE
+
+Diagnose and fix the error. Common causes ranked by frequency:
+1. API hallucination (invented function/parameter name) -- check verified methods list
+2. LaTeX error -- missing r"" prefix, unbalanced braces, text in MathTex
+3. Positioning error -- objects off-screen or stacked at ORIGIN
+4. Timing error -- tracker.duration used for multiple animations
+5. Wrong base class -- must be VoiceoverScene, not Scene
+6. Deprecated API -- Code(file_name=...) -> Code(code_string=...), etc.
+7. Import error -- VoiceoverScene is NOT in "from manim import *", needs separate import
+
+Return ONLY the corrected Python code. No explanation, no markdown fences.
