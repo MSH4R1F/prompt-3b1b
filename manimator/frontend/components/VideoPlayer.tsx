@@ -9,13 +9,13 @@ interface Props {
 
 export function VideoPlayer({ videoUrl, onReset }: Props) {
   return (
-    <div className="flex w-full max-w-2xl flex-col items-center gap-4">
-      <video src={videoUrl} controls autoPlay className="w-full rounded-lg shadow-lg" />
-      <div className="flex gap-3">
+    <div className="w-full rounded-2xl border bg-white p-4 shadow-sm">
+      <video src={videoUrl} controls autoPlay className="w-full rounded-xl border bg-black/5" />
+      <div className="mt-4 flex flex-wrap gap-3">
         <a href={videoUrl} download>
           <Button variant="outline">Download</Button>
         </a>
-        <Button onClick={onReset}>Generate Another</Button>
+        <Button onClick={onReset}>New Video</Button>
       </div>
     </div>
   );

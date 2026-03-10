@@ -1,5 +1,10 @@
 node_modules
 .next
 .env.local
+.env
+.dev.vars
+.wrangler
+.open-next
+cloudflare-env.d.ts
 
 *.tsbuildinfo

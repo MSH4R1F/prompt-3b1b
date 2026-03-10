@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -13,6 +12,6 @@ class JobStatus(str, Enum):
 class Job(BaseModel):
     job_id: str
     status: JobStatus
-    video_url: Optional[str] = None
-    error: Optional[str] = None
-    stage: Optional[str] = None
+    video_url: str | None = None
+    error: str | None = None
+    stage: str | None = None

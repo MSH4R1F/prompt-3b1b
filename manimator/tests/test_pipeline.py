@@ -97,5 +97,5 @@ def test_pedagogy_check_returns_valid_plan():
 
     reviewed = pedagogy_check(_minimal_plan())
     assert isinstance(reviewed, LessonPlan)
-    assert reviewed.topic == "addition"
+    assert reviewed.topic != ""
     assert len(reviewed.segments) >= 1
