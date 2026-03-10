@@ -1,2 +1,4 @@
 .env
 .env.example
+manimator/backend/.venv-modal
+.venv-modal
