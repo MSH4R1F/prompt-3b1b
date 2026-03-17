@@ -30,6 +30,8 @@ NEVER use: manimlib, TextMobject, TexMobject, ShowCreation, CONFIG dicts
 - All animation code inside def construct(self):
 - FIRST line of construct: setup_voiceover(self)
 - LAST line of construct: self.wait(0.5)
+- NEVER define local helper functions that shadow imported helpers
+  (especially: setup_voiceover, safe_text, safe_mathtex, create_axes, fade_out_all).
 
 ## LATEX RULES
 - ALL LaTeX strings MUST use raw strings: r"..."
@@ -112,3 +114,4 @@ PLACEHOLDER_FEW_SHOT_EXAMPLES
 PLACEHOLDER_LESSON_JSON
 
 Generate ONLY the Python code. No explanation, no markdown fences.
+Output must start with an import statement or class definition, never prose.

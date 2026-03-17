@@ -4,7 +4,7 @@ import pathlib
 import re
 import subprocess
 import tempfile
-from typing import Optional, Tuple
+import ast
 
 import anthropic
 
@@ -13,7 +13,9 @@ from schemas.lesson import LessonPlan
 
 _PROMPTS_DIR = pathlib.Path(__file__).parent.parent / "prompts"
 _TEMPLATES_DIR = pathlib.Path(__file__).parent.parent / "manim_helpers" / "templates"
-_client: Optional[anthropic.Anthropic] = None
+_BACKEND_DIR = str(pathlib.Path(__file__).parent.parent)
+
+_client: anthropic.Anthropic | None = None
 
 
 def _get_client() -> anthropic.Anthropic:
@@ -56,22 +58,54 @@ def _call_claude(system: str, user: str) -> str:
     return response.content[0].text.strip()
 
 
-def _strip_code_fences(code: str) -> str:
+def strip_code_fences(code: str) -> str:
+    """Remove markdown code fences from LLM-generated Python code."""
     code = code.strip()
     if "```python" in code:
         code = code.split("```python", 1)[1]
-        if "```" in code:
-            code = code.split("```", 1)[0]
+        closing = code.find("```")
+        if closing != -1:
+            code = code[:closing]
     elif code.startswith("```"):
-        lines = code.split("\n", 1)
-        code = lines[1] if len(lines) > 1 else code
-        if "```" in code:
-            code = code.rsplit("```", 1)[0]
+        first_newline = code.find("\n")
+        if first_newline != -1:
+            code = code[first_newline + 1:]
+        closing = code.find("```")
+        if closing != -1:
+            code = code[:closing]
     return code.strip()
 
 
-def _try_render(code: str, backend_dir: Optional[str] = None) -> Tuple[bool, str]:
-    with tempfile.NamedTemporaryFile(suffix=".py", mode="w", delete=False, dir=backend_dir) as file_obj:
+def _strip_non_python_prefix(code: str) -> str:
+    """Remove any leading analysis text before the first Python statement."""
+    lines = code.splitlines()
+    starts = ("from ", "import ", "class ", "def ", "@")
+    for i, line in enumerate(lines):
+        if line.strip().startswith(starts):
+            if i > 0:
+                return "\n".join(lines[i:])
+            break
+    return code
+
+
+def _sanitize_python_output(code: str) -> str:
+    """Best-effort sanitizer for LLM Python output."""
+    cleaned = _strip_non_python_prefix(strip_code_fences(code))
+    try:
+        ast.parse(cleaned)
+        return cleaned
+    except SyntaxError:
+        return cleaned
+
+
+def _try_render(code: str) -> tuple[bool, str]:
+    """
+    Write code to a temp file and attempt a real manim dry-run render.
+    Falls back to py_compile if manim is unavailable.
+    Returns (success, error_message).
+    """
+    # Write to system temp dir, not the source directory
+    with tempfile.NamedTemporaryFile(suffix=".py", mode="w", delete=False) as file_obj:
         file_obj.write(code)
         file_path = file_obj.name
 
@@ -80,8 +114,7 @@ def _try_render(code: str, backend_dir: Optional[str] = None) -> Tuple[bool, str
         class_name = match.group(1) if match else "GeneratedScene"
 
         env = os.environ.copy()
-        if backend_dir:
-            env["PYTHONPATH"] = backend_dir + ":" + env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = _BACKEND_DIR + ":" + env.get("PYTHONPATH", "")
 
         result = subprocess.run(
             ["python", "-m", "manim", "render", "-ql", "--dry_run", file_path, class_name],
@@ -111,6 +144,26 @@ def _try_render(code: str, backend_dir: Optional[str] = None) -> Tuple[bool, str
         os.unlink(file_path)
 
 
+def repair_code(code: str, error: str) -> str:
+    """
+    Ask Claude to fix a broken scene. Returns cleaned code (fences stripped).
+    Public so modal_app.py can use it without importing private functions.
+    """
+    repair_prompt = (
+        _load_prompt("repair_system.txt")
+        .replace("PLACEHOLDER_TRACEBACK", error)
+        .replace("PLACEHOLDER_ORIGINAL_CODE", code)
+    )
+    raw = _call_claude(repair_prompt, "Fix the error. Return ONLY corrected Python.")
+    sanitized = _sanitize_python_output(raw)
+    # If the repair response still isn't valid Python, keep the previous code.
+    try:
+        ast.parse(sanitized)
+        return sanitized
+    except SyntaxError:
+        return code
+
+
 def generate_scene_code(plan: LessonPlan, max_attempts: int = 3) -> str:
     coder_prompt = _load_prompt("coder_system.txt")
     coder_system = (
@@ -125,21 +178,15 @@ def generate_scene_code(plan: LessonPlan, max_attempts: int = 3) -> str:
         "Return ONLY the Python code."
     )
 
-    code = _call_claude(coder_system, user_message)
-    backend_dir = str(pathlib.Path(__file__).parent.parent)
+    code = _sanitize_python_output(_call_claude(coder_system, user_message))
 
     for attempt in range(max_attempts):
-        code = _strip_code_fences(code)
-        ok, error = _try_render(code, backend_dir=backend_dir)
+        ok, error = _try_render(code)
         if ok:
             return code
 
         if attempt < max_attempts - 1:
-            repair_prompt = (
-                _load_prompt("repair_system.txt")
-                .replace("PLACEHOLDER_TRACEBACK", error)
-                .replace("PLACEHOLDER_ORIGINAL_CODE", code)
-            )
-            code = _call_claude(repair_prompt, "Fix the error. Return ONLY corrected Python.")
+            code = repair_code(code, error)
 
-    return code
+    # Always return fence-stripped code even if all attempts failed
+    return _sanitize_python_output(code)

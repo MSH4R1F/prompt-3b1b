@@ -1,13 +1,13 @@
 import json
 import pathlib
-from typing import Optional
 
 import anthropic
 
+from pipeline.utils import strip_markdown_fences
 from schemas.lesson import LessonPlan
 
 _PROMPTS_DIR = pathlib.Path(__file__).parent.parent / "prompts"
-_client: Optional[anthropic.Anthropic] = None
+_client: anthropic.Anthropic | None = None
 
 
 def _get_client() -> anthropic.Anthropic:
@@ -19,16 +19,6 @@ def _get_client() -> anthropic.Anthropic:
 
 def _load_prompt(name: str) -> str:
     return (_PROMPTS_DIR / name).read_text()
-
-
-def _strip_markdown_fences(text: str) -> str:
-    text = text.strip()
-    if text.startswith("```"):
-        lines = text.split("\n", 1)
-        text = lines[1] if len(lines) > 1 else ""
-    if text.endswith("```"):
-        text = text[:-3]
-    return text.strip()
 
 
 def plan_lesson(prompt: str, duration: int = 60, audience: str = "beginner") -> LessonPlan:
@@ -48,6 +38,6 @@ def plan_lesson(prompt: str, duration: int = 60, audience: str = "beginner") -> 
         messages=[{"role": "user", "content": user_message}],
     )
 
-    raw = _strip_markdown_fences(response.content[0].text)
+    raw = strip_markdown_fences(response.content[0].text)
     data = json.loads(raw)
     return LessonPlan(**data)

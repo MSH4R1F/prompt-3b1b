@@ -6,4 +6,3 @@ anthropic
 boto3
 pydantic>=2.0
 pytest
-modal

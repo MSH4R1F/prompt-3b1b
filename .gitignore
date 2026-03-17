@@ -1,2 +1,23 @@
+# Secrets
 .env
-.env.example
+manimator/frontend/.env
+manimator/frontend/.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.venv-modal
+manimator/backend/.venv-modal
+
+# Node / Next.js
+node_modules/
+manimator/frontend/.next/
+manimator/frontend/.open-next/
+
+# Internal planning docs (not for public)
+docs/internal/
+
+# Editor
+.DS_Store

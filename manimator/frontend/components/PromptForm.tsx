@@ -25,22 +25,30 @@ export function PromptForm({ onSubmit, loading }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-xl flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="prompt">What should we explain?</Label>
+    <form
+      onSubmit={handleSubmit}
+      className="w-full rounded-2xl border bg-white p-4 shadow-sm"
+    >
+      <div className="mb-3 flex flex-col gap-2">
+        <Label htmlFor="prompt" className="text-xs uppercase tracking-wide text-slate-500">
+          Prompt
+        </Label>
         <Textarea
           id="prompt"
-          placeholder="e.g. Explain gradient descent to a beginner in 60 seconds"
+          placeholder="Explain gradient descent to a beginner with a geometric intuition."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          rows={3}
+          rows={4}
+          className="resize-none border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
           required
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-3 border-t pt-3 md:flex-row md:items-end">
         <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor="duration">Duration (seconds)</Label>
+          <Label htmlFor="duration" className="text-xs uppercase tracking-wide text-slate-500">
+            Duration
+          </Label>
           <Select value={duration} onValueChange={setDuration}>
             <SelectTrigger id="duration">
               <SelectValue />
@@ -54,7 +62,9 @@ export function PromptForm({ onSubmit, loading }: Props) {
         </div>
 
         <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor="audience">Audience</Label>
+          <Label htmlFor="audience" className="text-xs uppercase tracking-wide text-slate-500">
+            Audience
+          </Label>
           <Select value={audience} onValueChange={(v) => setAudience(v as typeof audience)}>
             <SelectTrigger id="audience">
               <SelectValue />
@@ -66,11 +76,11 @@ export function PromptForm({ onSubmit, loading }: Props) {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      <Button type="submit" disabled={loading || !prompt.trim()}>
-        {loading ? "Generating..." : "Generate Video"}
-      </Button>
+        <Button type="submit" disabled={loading || !prompt.trim()} className="w-full md:w-auto">
+          {loading ? "Generating..." : "Generate"}
+        </Button>
+      </div>
     </form>
   );
 }

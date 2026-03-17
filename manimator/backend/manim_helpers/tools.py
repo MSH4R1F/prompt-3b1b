@@ -152,6 +152,13 @@ def setup_voiceover(scene: VoiceoverScene, voice_name: str = "Adam", use_bookmar
     }
     if use_bookmarks:
         kwargs["transcription_model"] = "base"
+    else:
+        # Explicitly disable transcription to avoid whisper dependency prompts.
+        kwargs["transcription_model"] = None
+    print(
+        "[setup_voiceover] provider=elevenlabs "
+        f"use_bookmarks={use_bookmarks} transcription_model={kwargs['transcription_model']}"
+    )
     scene.set_speech_service(ElevenLabsService(**kwargs))
 
 
@@ -160,4 +167,4 @@ def setup_voiceover(scene: VoiceoverScene, voice_name: str = "Adam", use_bookmar
 def fade_out_all(scene, duration: float = 0.5):
     """Fade out all current mobjects if present."""
     if scene.mobjects:
-        scene.play(*[FadeOut(m) for m in scene.mobjects], run_time=duration)
+        scene.play(*[FadeOut(m) for m in scene.mobjects[:]], run_time=duration)
