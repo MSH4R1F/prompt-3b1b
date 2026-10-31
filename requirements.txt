@@ -1,0 +1,32 @@
+# Python dependencies for manimator project
+# This file consolidates dependencies from Modal image definitions and backend requirements
+
+# Core animation framework
+manim>=0.19,<0.21
+
+# Voiceover and TTS
+manim-voiceover[elevenlabs]
+elevenlabs==0.2.27
+gTTS
+
+# AI/ML APIs
+anthropic
+
+# Cloud storage
+boto3
+
+# Data validation and APIs
+pydantic>=2.0
+fastapi
+
+# Testing
+pytest
+
+# Modal serverless platform
+modal
+
+# Build tools
+setuptools<82
+
+# Additional utilities
+requests
